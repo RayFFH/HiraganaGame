@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Metadata for character encoding and responsive design -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Title of the HTML document -->
@@ -32,7 +31,7 @@
             position: absolute;
             top: 40px;
             right: 10px;
-            color: yellow; /* Customizable color */
+            color: yellow;
             font-size: 16px;
         }
 
@@ -51,7 +50,7 @@
             top: 50px;
             left: 50%;
             transform: translateX(-50%);
-            color: red; /* Customizable color */
+            color: red; 
             font-size: 24px;
             display: none;
         }
@@ -59,7 +58,7 @@
         /* Styling for the guess input field */
         #guessInput {
             position: absolute;
-            bottom: 20%; /* Customizable bottom distance */
+            bottom: 20%; 
             left: 50%;
             transform: translate(-50%, 50%);
             font-size: 16px;
@@ -71,7 +70,7 @@
     </style>
 </head>
 <body>
-    <!-- Canvas for star background animation -->
+    <!-- Cstar background -->
     <canvas id="starCanvas"></canvas>
     <!-- Display for the current score -->
     <div id="score">Score: 0</div>
@@ -79,10 +78,10 @@
     <div id="highScore">High Score: 0</div>
     <!-- Display for the remaining lives -->
     <div id="lives">Lives: 5</div>
-    <!-- Message indicating the game is speeding up -->
+    <!-- Message indicating the game is increasing speed -->
     <div id="goingFaster">GOING FASTER</div>
 
-    <!-- Input field for the user's guess -->
+    <!-- user's guess -->
     <input type="text" id="guessInput" autofocus placeholder="Enter your guess">
 
     <script>
@@ -128,7 +127,7 @@
             "ダ": "da", "ヂ": "ji", "ヅ": "zu", "デ": "de", "ド": "do",
             "バ": "ba", "ビ": "bi", "ブ": "bu", "ベ": "be", "ボ": "bo",
             "パ": "pa", "ピ": "pi", "プ": "pu", "ペ": "pe", "ポ": "po",
-        };
+        }; //Hiragana and katakana characters that are mapped to their translations
 
         let currentCharacter = getRandomHiragana();
         let characterSize = 1;
@@ -136,17 +135,17 @@
         let lives = 5;
         let growthIncrement = 0.5;
         let goingFasterCounter = 0;
-        const CHARACTER_SIZE_THRESHOLD = 150; // Adjust this value as needed
-        const INCREASED_GROWTH_THRESHOLD = 10; // Increase character size growth after this score
+        const CHARACTER_SIZE_THRESHOLD = 150; 
+        const INCREASED_GROWTH_THRESHOLD = 10; // Increase character size growth from the score
         const INCREASED_GROWTH_RATE = 0.7; // Increased growth rate
 
         // Load high score from local storage
         const HIGH_SCORE_KEY = 'hiragana_game_high_score';
         let highScore = localStorage.getItem(HIGH_SCORE_KEY) || 0;
-
+        // The canvas dimensions
         canvas.width = WIDTH;
         canvas.height = HEIGHT;
-
+        //The starting star positions for the space background
         for (let i = 0; i < STAR_COUNT; i++) {
             stars.push({
                 x: Math.random() * WIDTH,
@@ -161,7 +160,7 @@
             const hiraganaCharacters = Object.keys(hiraganaToEnglish);
             return hiraganaCharacters[Math.floor(Math.random() * hiraganaCharacters.length)];
         }
-
+        //moves the stars in the background
         function moveStars() {
             for (const star of stars) {
                 star.z -= star.speed;
@@ -173,7 +172,7 @@
                 }
             }
         }
-
+        //Draws the starts on the background
         function drawStars() {
             ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
@@ -186,7 +185,8 @@
                 ctx.fill();
             }
         }
-
+        
+        //Draws the high score, score, lives
         function drawCharacter() {
             ctx.font = `${characterSize}px Arial`;
             ctx.fillStyle = "white";
@@ -194,7 +194,7 @@
             ctx.textBaseline = "middle";
             ctx.fillText(currentCharacter, WIDTH / 2, HEIGHT / 2);
         }
-
+        //listens for user input
         function drawScoreAndLives() {
             document.getElementById("score").innerText = `Score: ${score}`;
             document.getElementById("highScore").innerText = `High Score: ${highScore}`;
@@ -209,7 +209,7 @@
                 checkGuess();
             }
         });
-
+        //Checks if the user guess is correct or not
         function checkGuess() {
             const userGuess = guessInput.value.toLowerCase();
             const correctEnglish = hiraganaToEnglish[currentCharacter];
@@ -218,7 +218,7 @@
                 score += 1;
                 goingFasterCounter += 1;
 
-                // Check if the score is at the threshold for increased growth
+                // Check what the current speed is relative to the score 
                 if (score >= INCREASED_GROWTH_THRESHOLD) {
                     growthIncrement = INCREASED_GROWTH_RATE;
 
@@ -260,7 +260,7 @@
 
             characterSize += growthIncrement;
 
-            // Check if character size exceeds the threshold
+            // Check if character size exceeds the maximum size
             if (characterSize > CHARACTER_SIZE_THRESHOLD) {
                 lives -= 1;
                 if (lives === 0) {
@@ -269,8 +269,8 @@
                 }
                 characterSize = 1;
                 currentCharacter = getRandomHiragana();
-                growthIncrement = 0.5; // Reset growth increment
-                goingFasterElement.style.display = "none"; // Hide the "GOING FASTER" message
+                growthIncrement = 0.5; // Resets the growth rate of the characters
+                goingFasterElement.style.display = "none"; // Hides the "GOING FASTER" message
             }
 
             requestAnimationFrame(update);
@@ -281,8 +281,8 @@
             lives = 5;
             currentCharacter = getRandomHiragana();
             drawScoreAndLives(); // Update the score display
-            goingFasterElement.style.display = "none"; // Hide the "GOING FASTER" message
-            goingFasterCounter = 0; // Reset the counter
+            goingFasterElement.style.display = "none"; // Hides the "GOING FASTER" message
+            goingFasterCounter = 0; // Resets the counter
         }
 
         update();
