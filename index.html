@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Title of the HTML document -->
+    <title>Moving Star Background</title>
+    <!-- Styling for the layout and elements -->
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            background-color: black;
+        }
+
+        /* Styling for the score display */
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            font-size: 20px;
+        }
+
+        /* Styling for the high score display */
+        #highScore {
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            color: yellow;
+            font-size: 16px;
+        }
+
+        /* Styling for the lives display */
+        #lives {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 20px;
+        }
+
+        /* Styling for the "GOING FASTER" message */
+        #goingFaster {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: red; 
+            font-size: 24px;
+            display: none;
+        }
+
+        /* Styling for the guess input field */
+        #guessInput {
+            position: absolute;
+            bottom: 20%; 
+            left: 50%;
+            transform: translate(-50%, 50%);
+            font-size: 16px;
+            padding: 5px;
+            background-color: black;
+            color: white;
+            border: 1px solid white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Cstar background -->
+    <canvas id="starCanvas"></canvas>
+    <!-- Display for the current score -->
+    <div id="score">Score: 0</div>
+    <!-- Display for the high score -->
+    <div id="highScore">High Score: 0</div>
+    <!-- Display for the remaining lives -->
+    <div id="lives">Lives: 5</div>
+    <!-- Message indicating the game is increasing speed -->
+    <div id="goingFaster">GOING FASTER</div>
+
+    <!-- user's guess -->
+    <input type="text" id="guessInput" autofocus placeholder="Enter your guess">
+
+    <script>
+        // JavaScript code for game functionality
+        const canvas = document.getElementById("starCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const WIDTH = window.innerWidth;
+        const HEIGHT = window.innerHeight;
+        const STAR_COUNT = 200;
+        const stars = [];
+        const hiraganaToEnglish = {
+            "あ": "a", "い": "i", "う": "u", "え": "e", "お": "o",
+            "か": "ka", "き": "ki", "く": "ku", "け": "ke", "こ": "ko",
+            "さ": "sa", "し": "shi", "す": "su", "せ": "se", "そ": "so",
+            "た": "ta", "ち": "chi", "つ": "tsu", "て": "te", "と": "to",
+            "な": "na", "に": "ni", "ぬ": "nu", "ね": "ne", "の": "no",
+            "は": "ha", "ひ": "hi", "ふ": "fu", "へ": "he", "ほ": "ho",
+            "ま": "ma", "み": "mi", "む": "mu", "め": "me", "も": "mo",
+            "や": "ya", "ゆ": "yu", "よ": "yo",
+            "ら": "ra", "り": "ri", "る": "ru", "れ": "re", "ろ": "ro",
+            "わ": "wa", "を": "wo",
+            "ん": "n",
+            "が": "ga", "ぎ": "gi", "ぐ": "gu", "げ": "ge", "ご": "go",
+            "ざ": "za", "じ": "ji", "ず": "zu", "ぜ": "ze", "ぞ": "zo",
+            "だ": "da", "ぢ": "ji", "づ": "zu", "で": "de", "ど": "do",
+            "ば": "ba", "び": "bi", "ぶ": "bu", "べ": "be", "ぼ": "bo",
+            "ぱ": "pa", "ぴ": "pi", "ぷ": "pu", "ぺ": "pe", "ぽ": "po",
+        
+            "ア": "a", "イ": "i", "ウ": "u", "エ": "e", "オ": "o",
+            "カ": "ka", "キ": "ki", "ク": "ku", "ケ": "ke", "コ": "ko",
+            "サ": "sa", "シ": "shi", "ス": "su", "セ": "se", "ソ": "so",
+            "タ": "ta", "チ": "chi", "ツ": "tsu", "テ": "te", "ト": "to",
+            "ナ": "na", "ニ": "ni", "ヌ": "nu", "ネ": "ne", "ノ": "no",
+            "ハ": "ha", "ヒ": "hi", "フ": "fu", "ヘ": "he", "ホ": "ho",
+            "マ": "ma", "ミ": "mi", "ム": "mu", "メ": "me", "モ": "mo",
+            "ヤ": "ya", "ユ": "yu", "ヨ": "yo",
+            "ラ": "ra", "リ": "ri", "ル": "ru", "レ": "re", "ロ": "ro",
+            "ワ": "wa", "ヲ": "wo",
+            "ン": "n",
+            "ガ": "ga", "ギ": "gi", "グ": "gu", "ゲ": "ge", "ゴ": "go",
+            "ザ": "za", "ジ": "ji", "ズ": "zu", "ゼ": "ze", "ゾ": "zo",
+            "ダ": "da", "ヂ": "ji", "ヅ": "zu", "デ": "de", "ド": "do",
+            "バ": "ba", "ビ": "bi", "ブ": "bu", "ベ": "be", "ボ": "bo",
+            "パ": "pa", "ピ": "pi", "プ": "pu", "ペ": "pe", "ポ": "po",
+        }; //Hiragana and katakana characters that are mapped to their translations
+
+        let currentCharacter = getRandomHiragana();
+        let characterSize = 1;
+        let score = 0;
+        let lives = 5;
+        let growthIncrement = 0.5;
+        let goingFasterCounter = 0;
+        const CHARACTER_SIZE_THRESHOLD = 150; 
+        const INCREASED_GROWTH_THRESHOLD = 10; // Increase character size growth from the score
+        const INCREASED_GROWTH_RATE = 0.7; // Increased growth rate
+
+        // Load high score from local storage
+        const HIGH_SCORE_KEY = 'hiragana_game_high_score';
+        let highScore = localStorage.getItem(HIGH_SCORE_KEY) || 0;
+        // The canvas dimensions
+        canvas.width = WIDTH;
+        canvas.height = HEIGHT;
+        //The starting star positions for the space background
+        for (let i = 0; i < STAR_COUNT; i++) {
+            stars.push({
+                x: Math.random() * WIDTH,
+                y: Math.random() * HEIGHT,
+                z: Math.random() * WIDTH,
+                size: Math.random() * 2 + 1,
+                speed: Math.random() * 5 + 1
+            });
+        }
+
+        function getRandomHiragana() {
+            const hiraganaCharacters = Object.keys(hiraganaToEnglish);
+            return hiraganaCharacters[Math.floor(Math.random() * hiraganaCharacters.length)];
+        }
+        //moves the stars in the background
+        function moveStars() {
+            for (const star of stars) {
+                star.z -= star.speed;
+
+                if (star.z < 1) {
+                    star.x = Math.random() * WIDTH;
+                    star.y = Math.random() * HEIGHT;
+                    star.z = WIDTH;
+                }
+            }
+        }
+        //Draws the starts on the background
+        function drawStars() {
+            ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+            for (const star of stars) {
+                const scale = WIDTH / (star.z + 1);
+
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fillStyle = "white";
+                ctx.fill();
+            }
+        }
+        
+        //Draws the high score, score, lives
+        function drawCharacter() {
+            ctx.font = `${characterSize}px Arial`;
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(currentCharacter, WIDTH / 2, HEIGHT / 2);
+        }
+        //listens for user input
+        function drawScoreAndLives() {
+            document.getElementById("score").innerText = `Score: ${score}`;
+            document.getElementById("highScore").innerText = `High Score: ${highScore}`;
+            document.getElementById("lives").innerText = `Lives: ${lives}`;
+        }
+
+        const goingFasterElement = document.getElementById("goingFaster");
+        const guessInput = document.getElementById("guessInput");
+
+        guessInput.addEventListener("keyup", function (event) {
+            if (event.key === "Enter") {
+                checkGuess();
+            }
+        });
+        //Checks if the user guess is correct or not
+        function checkGuess() {
+            const userGuess = guessInput.value.toLowerCase();
+            const correctEnglish = hiraganaToEnglish[currentCharacter];
+
+            if (userGuess === correctEnglish) {
+                score += 1;
+                goingFasterCounter += 1;
+
+                // Check what the current speed is relative to the score 
+                if (score >= INCREASED_GROWTH_THRESHOLD) {
+                    growthIncrement = INCREASED_GROWTH_RATE;
+
+                    // Check if the counter is a multiple of 5
+                    if (goingFasterCounter % 5 === 0) {
+                        goingFasterElement.style.display = "block";
+
+                        // Hide the message after one second
+                        setTimeout(() => {
+                            goingFasterElement.style.display = "none";
+                        }, 1000);
+                    }
+                }
+
+                // Check if the current score is higher than the stored high score
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem(HIGH_SCORE_KEY, highScore);
+                }
+            } else {
+                lives -= 1;
+                if (lives === 0) {
+                    alert("Game over!");
+                    resetGame();
+                }
+            }
+
+            characterSize = 1;
+            currentCharacter = getRandomHiragana();
+            guessInput.value = "";
+            drawScoreAndLives(); // Update the score display
+        }
+
+        function update() {
+            moveStars();
+            drawStars();
+            drawCharacter();
+            drawScoreAndLives();
+
+            characterSize += growthIncrement;
+
+            // Check if character size exceeds the maximum size
+            if (characterSize > CHARACTER_SIZE_THRESHOLD) {
+                lives -= 1;
+                if (lives === 0) {
+                    alert("Game over!");
+                    resetGame();
+                }
+                characterSize = 1;
+                currentCharacter = getRandomHiragana();
+                growthIncrement = 0.5; // Resets the growth rate of the characters
+                goingFasterElement.style.display = "none"; // Hides the "GOING FASTER" message
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        function resetGame() {
+            score = 0;
+            lives = 5;
+            currentCharacter = getRandomHiragana();
+            drawScoreAndLives(); // Update the score display
+            goingFasterElement.style.display = "none"; // Hides the "GOING FASTER" message
+            goingFasterCounter = 0; // Resets the counter
+        }
+
+        update();
+    </script>
+</body>
+</html>
